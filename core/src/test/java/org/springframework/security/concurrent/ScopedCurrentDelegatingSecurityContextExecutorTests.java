@@ -25,7 +25,7 @@ public class ScopedCurrentDelegatingSecurityContextExecutorTests {
 	}
 	
 	@Test
-	public void testThatSucceds() throws InterruptedException {
+	public void testThatSucceeds() throws InterruptedException {
 		SecurityContextHolder.setContextHolderStrategy(new ScopedSecurityContextHolderStrategy());
 		final DelegatingSecurityContextExecutor executor = new DelegatingSecurityContextExecutor(Executors.newFixedThreadPool(5));
 		
