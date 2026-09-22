@@ -17,6 +17,7 @@
 package org.springframework.security.concurrent;
 
 import java.util.concurrent.Callable;
+import java.util.function.UnaryOperator;
 
 import org.jspecify.annotations.Nullable;
 
@@ -39,6 +40,8 @@ abstract class AbstractDelegatingSecurityContextSupport {
 		.getContextHolderStrategy();
 
 	private final @Nullable SecurityContext securityContext;
+	
+	private volatile UnaryOperator<Runnable> runnableWrapper;
 
 	/**
 	 * Creates a new {@link AbstractDelegatingSecurityContextSupport} that uses the
@@ -50,6 +53,10 @@ abstract class AbstractDelegatingSecurityContextSupport {
 	 */
 	AbstractDelegatingSecurityContextSupport(@Nullable SecurityContext securityContext) {
 		this.securityContext = securityContext;
+		runnableWrapper = (delegate) -> {
+			return DelegatingSecurityContextRunnable.create(delegate, this.securityContext,
+					this.securityContextHolderStrategy);
+			};
 	}
 
 	void setSecurityContextHolderStrategy(SecurityContextHolderStrategy securityContextHolderStrategy) {
@@ -58,13 +65,16 @@ abstract class AbstractDelegatingSecurityContextSupport {
 	}
 
 	protected final Runnable wrap(Runnable delegate) {
-		return DelegatingSecurityContextRunnable.create(delegate, this.securityContext,
-				this.securityContextHolderStrategy);
+		return runnableWrapper.apply(delegate);
 	}
 
 	protected final <T> Callable<T> wrap(Callable<T> delegate) {
 		return DelegatingSecurityContextCallable.create(delegate, this.securityContext,
 				this.securityContextHolderStrategy);
+	}
+
+	public void setRunnableWrapper(UnaryOperator<Runnable> runnableWrapper) {
+		this.runnableWrapper = runnableWrapper;
 	}
 
 }
